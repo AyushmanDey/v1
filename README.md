@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NEXIS Campus AI
 
-## Getting Started
+NEXIS is a pilot campus learning workspace with a course-grounded assistant. The current foundation includes a Next.js and TypeScript frontend, a FastAPI backend, Supabase Auth and PostgreSQL integration, private course document storage, retryable document ingestion, and citation-aware retrieval.
 
-First, run the development server:
+## Architecture
+
+This project is a modular monolith: one Next.js app and one FastAPI application. Supabase provides authentication, PostgreSQL with row-level security, private object storage, and pgvector. Hosted chat and embedding providers are configured through server-side environment variables.
+
+See [docs/architecture.md](docs/architecture.md) for the system structure and security boundaries.
+
+## Local setup
+
+1. Copy `.env.example` to `.env.local` for the frontend and to `backend/.env` for the API. Fill in the Supabase URL and public/anonymous key in both files. Keep the service role key and AI provider key only in `backend/.env`.
+2. Apply the SQL files in `supabase/migrations/` to your Supabase project in order.
+3. Install frontend dependencies and start Next.js:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+4. In a second terminal, install and run the API:
+
+   ```bash
+   cd backend
+   python -m pip install -e ".[dev]"
+   python -m uvicorn app.main:app --reload --port 8000
+   ```
+
+The web app runs at `http://localhost:3000`; the API documentation is at `http://localhost:8000/docs`.
+
+## Tests
+
+Run the backend test suite from the repository root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+python -m pytest backend/tests -q
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Security notes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Do not commit `.env`, `.env.local`, or `backend/.env` files. `.env.example` contains blank placeholders only.
+- Keep course storage private. Access is enforced by the API and Supabase row-level security policies.
+- Retrieved document content is untrusted input. Campus-grounded answers must cite retrievable sources and abstain when evidence is insufficient.
+- The initial release does not execute generated code.
