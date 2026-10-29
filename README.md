@@ -10,6 +10,8 @@ See [docs/architecture.md](docs/architecture.md) for the system structure and se
 
 ## Local setup
 
+Running the AI locally with Ollama? Follow the step-by-step guide in [docs/local-setup-ollama.md](docs/local-setup-ollama.md).
+
 1. Copy `.env.example` to `.env.local`. Fill in the Supabase URL and public/anonymous key. Add the service role key and AI provider settings as server-only variables (never with a `NEXT_PUBLIC_` prefix).
 2. Apply the SQL files in `supabase/migrations/` to your Supabase project in order (paste each into the SQL Editor). Re-run this step when a new migration is added.
 3. Install dependencies and start Next.js:
