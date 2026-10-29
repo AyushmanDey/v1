@@ -12,10 +12,6 @@
 
 # testing
 /coverage
-__pycache__/
-*.py[cod]
-.pytest_cache/
-*.egg-info/
 
 # local agent configuration and skill caches
 .agents/
@@ -25,6 +21,7 @@ skills-lock.json
 
 # next.js
 /.next/
+/.next-ui-test/
 /out/
 
 # production
@@ -51,4 +48,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/lib/generated/prisma
+/.perf/

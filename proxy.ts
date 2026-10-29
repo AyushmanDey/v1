@@ -5,6 +5,8 @@ export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 
+// API routes authenticate with Bearer tokens and skip the proxy, so large uploads are not
+// buffered (and truncated) by the proxy body limit.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
