@@ -7,7 +7,7 @@ import { requestNotificationPermission, useCourseDocuments } from "@/hooks/use-c
 import { CourseMaterials, DocumentNotices } from "@/components/campus/course-materials";
 import { VerifyEmail, describeCodeError, describeSignUpError } from "@/components/campus/verify-email";
 import type { Session } from "@supabase/supabase-js";
-import { ArrowUp, BookOpen, Check, CircleHelp, FileText, LoaderCircle, LockKeyhole, LogOut, MessageSquareText, Sparkles, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowUpRight, BookOpen, Check, ChevronDown, CircleHelp, FileText, LoaderCircle, LogOut, MessageSquareText, Sparkles, Upload } from "lucide-react";
 
 type Citation = { source_id: string; chunk_id: string; document_id: string; title: string; file_name: string; page_start: number | null; page_end: number | null; chunk_index: number; similarity: number; url: string; excerpt: string };
 type Answer = { answer: string; insufficient_evidence: boolean; citations: Citation[] };
@@ -228,63 +228,196 @@ export function CampusChat({ confirmationExpired = false }: { confirmationExpire
   }
 
   if (!configured) return <SetupScreen />;
-  if (!ready) return <div className="grid min-h-screen place-items-center bg-background"><LoaderCircle className="animate-spin text-indigo-600" /></div>;
+  if (!ready) return <div className="grid min-h-screen place-items-center bg-background"><LoaderCircle className="animate-spin text-muted-foreground" aria-label="Loading" /></div>;
   if (!session && pendingVerification) return <VerifyEmail email={pendingVerification} onVerify={verifySignupCode} onResend={resendSignupCode} onBack={() => { setPendingVerification(""); setAuthMode("signup"); setAuthError(""); setAuthNotice(""); }} />;
   if (!session) return <SignIn email={email} setEmail={setEmail} password={password} setPassword={setPassword} mode={authMode} setMode={setAuthMode} busy={authBusy} error={authError} notice={authNotice} confirmationExpired={showExpiredConfirmation} canResendConfirmation={false} onResend={resendConfirmation} onSubmit={authenticate} />;
 
-  return <div className="flex h-dvh overflow-hidden bg-background text-foreground">
-    <DocumentNotices notices={materials.notices} onDismiss={materials.dismiss} />
-    <aside className="hidden w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white px-5 py-6 md:flex">
-      <Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={190} height={61} className="hidden h-10 w-auto dark:block" />
-      <div className="mt-10"><p className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Workspace</p><div className="flex items-center gap-3 rounded-xl bg-indigo-50 px-3 py-3 text-sm font-semibold text-indigo-700"><MessageSquareText size={17} /> Course assistant</div><div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500"><BookOpen size={17} /> Study guide <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px]">Soon</span></div><div className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500"><Sparkles size={17} /> Build with AI <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px]">Soon</span></div></div>
-      <div className="mt-auto rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center gap-2 text-xs font-semibold"><span className="size-2 rounded-full bg-emerald-500" /> Private course workspace</div><p className="mt-2 text-[11px] leading-5 text-slate-500">Answers use course materials you’re authorized to access.</p></div>
-    </aside>
-    <main className="flex h-dvh min-w-0 flex-1 flex-col">
-      <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 pr-16 md:px-9 md:pr-20"><div><div className="text-sm font-semibold">Campus assistant</div><div className="mt-0.5 text-xs text-slate-500">Ask questions grounded in your course materials</div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-500 sm:flex"><Wifi size={13} className="text-emerald-500" /> Connected</div><div className="flex size-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">{(session.user.email || "S").slice(0,1).toUpperCase()}</div><button onClick={signOut} title="Sign out" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><LogOut size={17} /></button></div></header>
-      <section className="mx-auto flex min-h-0 w-full max-w-[1000px] flex-1 flex-col px-4 pb-5 md:px-9">
-        {/* Course controls scroll on their own so the conversation and question box always keep their space. */}
-        <div className="max-h-[45%] shrink-0 overflow-y-auto">
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 py-4">
-          <label className="text-xs font-semibold text-slate-500" htmlFor="course-id">Course</label>
-          <select id="course-id" value={courseId} onChange={(event) => { setCourseId(event.target.value); setMessages([]); setUploadedDocument(null); }} disabled={coursesLoading || courses.length === 0} className="h-9 min-w-[220px] flex-1 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:text-slate-400">
-            {courses.length === 0 ? <option value="">{coursesLoading ? "Loading courses…" : "Create a course to get started"}</option> : courses.map((course) => <option key={course.id} value={course.id}>{course.code} · {course.name}</option>)}
-          </select>
-          <button onClick={() => { setShowCourseForm((value) => !value); setCourseFormError(""); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-700">{showCourseForm ? "Cancel" : "New course"}</button>
-          <button onClick={() => { setShowUpload((value) => !value); setUploadError(""); }} disabled={!courseId} className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"><FileText size={14}/> Add course material</button>
-          <button onClick={() => setShowSetup((value) => !value)} title="Course help" className="rounded-lg p-2 text-slate-400 hover:bg-white"><CircleHelp size={16}/></button>
+  const activeCourse = courses.find((course) => course.id === courseId);
+  const userInitial = (session.user.email || "S").slice(0, 1).toUpperCase();
+
+  return (
+    <div className="flex h-dvh overflow-hidden bg-background text-foreground">
+      <DocumentNotices notices={materials.notices} onDismiss={materials.dismiss} />
+
+      <aside className="hidden w-[248px] shrink-0 flex-col border-r border-border px-4 py-7 md:flex">
+        <div className="px-3"><BrandLogo className="h-9 w-auto" /></div>
+        <nav aria-label="Workspace" className="mt-12">
+          <p className="mb-2 px-3 text-xs font-medium text-muted-foreground">Workspace</p>
+          <div aria-current="page" className="flex h-10 items-center gap-3 rounded-full border border-border bg-card px-4 text-sm font-medium"><MessageSquareText size={16} aria-hidden="true" /> Course assistant</div>
+          <div className="mt-1 flex h-10 items-center gap-3 px-4 text-sm text-muted-foreground"><BookOpen size={16} aria-hidden="true" /> Study guide <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px]">Soon</span></div>
+          <div className="flex h-10 items-center gap-3 px-4 text-sm text-muted-foreground"><Sparkles size={16} aria-hidden="true" /> Build with AI <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px]">Soon</span></div>
+        </nav>
+        <div className="mt-auto px-3">
+          <p className="flex items-center gap-2 text-xs font-medium"><span className="size-2 rounded-full bg-lime ring-1 ring-foreground/20" aria-hidden="true" /> Private course workspace</p>
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">Answers use only the course materials you’re allowed to access.</p>
+          <p className="mt-4 truncate border-t border-border pt-4 text-xs text-muted-foreground" title={session.user.email ?? undefined}>{session.user.email}</p>
         </div>
-        {coursesError && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{coursesError}</p>}
-        {showSetup && <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-xs leading-5 text-indigo-900"><strong>Course access</strong><p className="mt-1">Courses you own or have been added to appear here. Creating a course makes you its instructor.</p></div>}
-        {showCourseForm && <form onSubmit={createCourse} className="mt-3 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_180px_auto] sm:items-end">
-          <label className="text-xs font-semibold text-slate-600">Course name<input required maxLength={200} value={newCourseName} onChange={(event) => setNewCourseName(event.target.value)} placeholder="Introduction to Biology" className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"/></label>
-          <label className="text-xs font-semibold text-slate-600">Course code<input required maxLength={40} value={newCourseCode} onChange={(event) => setNewCourseCode(event.target.value)} placeholder="BIO-101" className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"/></label>
-          <button disabled={courseBusy} className="flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{courseBusy ? <LoaderCircle size={14} className="animate-spin"/> : null} Create course</button>
-          {courseFormError && <p role="alert" className="text-xs text-rose-700 sm:col-span-3">{courseFormError}</p>}
-        </form>}
-        {showUpload && <form onSubmit={uploadCourseDocument} className="mt-3 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <label className="text-xs font-semibold text-slate-600">Document title<input maxLength={200} value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} placeholder={uploadFile?.name || "Lecture notes"} className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"/></label>
-          <label className="text-xs font-semibold text-slate-600">Course file<input ref={fileInput} required type="file" accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => setUploadFile(event.target.files?.[0] || null)} className="mt-1.5 block h-10 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-normal file:mr-2 file:rounded-md file:border-0 file:bg-indigo-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-indigo-700"/></label>
-          <button disabled={!uploadFile || uploadBusy} className="flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-xs font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">{uploadBusy ? <LoaderCircle size={14} className="animate-spin"/> : null} Upload</button>
-          {uploadError && <p role="alert" className="text-xs text-rose-700 sm:col-span-3">{uploadError}</p>}
-          {uploadedDocument && <p className="text-xs text-emerald-700 sm:col-span-3"><Check size={14} className="mr-1 inline"/>“{uploadedDocument.title}” uploaded. Indexing now; you’ll get a notification when it’s ready for questions.</p>}
-          <p className="text-[11px] text-slate-400 sm:col-span-3">PDF, TXT, or DOCX · up to 25 MiB · stored in private course storage</p>
-        </form>}
-        {courseId && <CourseMaterials documents={materials.documents} loading={materials.loading} error={materials.error} readyCount={materials.readyCount} pendingCount={materials.pendingCount} onDelete={async (document) => { await materials.remove(document); if (uploadedDocument?.id === document.id) setUploadedDocument(null); }} />}
-        </div>
-        <div ref={conversationRef} data-testid="conversation" className="min-h-0 flex-1 overflow-y-auto py-7"><div className="flex min-h-full flex-col justify-end">
-          {messages.length === 0 ? <div className="mx-auto mb-10 w-full max-w-[650px] text-center"><div className="mx-auto mb-5 grid size-14 place-items-center rounded-2xl bg-indigo-100 text-indigo-700"><Sparkles size={25}/></div><p className="text-xs font-bold uppercase tracking-[.18em] text-indigo-600">Your learning companion</p><h1 className="mt-3 text-3xl font-normal tracking-tight text-slate-900 md:text-[38px]">What are you working on?</h1><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">Ask a question about your course. NEXIS will answer from your campus materials and show where it found the information.</p><div className="mt-7 grid gap-3 text-left sm:grid-cols-2">{["Summarize the key ideas from this week", "Explain a concept from my lecture notes"].map((suggestion) => <button key={suggestion} disabled={!canAsk} onClick={() => setDraft(suggestion)} className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-[0_1px_2px_#0f172a08] transition hover:border-indigo-200 hover:bg-indigo-50/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white">{suggestion}<span className="mt-2 block text-xs text-slate-400">Ask the course assistant →</span></button>)}</div></div> : <div className="mx-auto w-full max-w-[700px] space-y-7">{messages.map((message) => <div key={message.id} className={message.role === "user" ? "flex justify-end" : "flex gap-3"}>{message.role === "user" ? <div className="max-w-[85%] rounded-2xl rounded-br-md bg-indigo-600 px-4 py-3 text-sm leading-6 text-white">{message.text}</div> : <div className="min-w-0 flex-1"><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-600"><span className="grid size-7 place-items-center rounded-lg bg-indigo-100 text-indigo-700"><Sparkles size={15}/></span> NEXIS assistant</div><p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{message.text}</p>{message.result?.citations.some((citation) => materials.deletedIds.has(citation.document_id)) && <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-600">This answer used course material that has since been deleted. Ask again to get an answer from the current materials.</div>}{message.result?.insufficient_evidence && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">The course materials didn’t provide enough evidence for a confident answer. Try a narrower question or check with your instructor.</div>}{Boolean(message.result?.citations.length) && <div className="mt-5"><div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.13em] text-slate-400"><FileText size={13}/> Sources ({message.result!.citations.length})</div><div className="grid gap-2">{message.result!.citations.map((citation) => materials.deletedIds.has(citation.document_id) ? <div key={citation.chunk_id} className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3.5"><div className="flex items-center gap-2"><FileText size={15} className="shrink-0 text-slate-300"/><span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-400 line-through">{citation.title || citation.file_name}</span><span className="shrink-0 text-[10px] font-semibold text-slate-500">Source deleted</span></div></div> : <a key={citation.chunk_id} href={citation.url} target="_blank" rel="noreferrer" className="group rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-indigo-200 hover:shadow-sm"><div className="flex items-center gap-2"><FileText size={15} className="shrink-0 text-indigo-500"/><span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-800">{citation.title || citation.file_name}</span><span className="shrink-0 text-[10px] text-slate-400">{citation.page_start ? `p. ${citation.page_start}${citation.page_end && citation.page_end !== citation.page_start ? `–${citation.page_end}` : ""}` : `Excerpt ${citation.chunk_index + 1}`}</span></div><p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">“{citation.excerpt}”</p><div className="mt-2 text-[10px] text-slate-400">{Math.round(citation.similarity * 100)}% match · View source ↗</div></a>)}</div></div>}</div>}</div>)}</div>}
-          {busy && <div className="mx-auto mt-6 flex w-full max-w-[700px] items-center gap-2 text-xs text-slate-500"><LoaderCircle size={15} className="animate-spin text-indigo-600"/> Searching course materials and drafting a cited answer…</div>}
-        </div></div>
-        <div className="mx-auto w-full max-w-[700px] shrink-0"><form onSubmit={ask} className="rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_8px_28px_#0f172a0a]"><textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={handleKey} rows={2} maxLength={1000} disabled={!canAsk} placeholder={canAsk ? "Ask about a concept, reading, or lecture…" : askHint || "Loading course materials…"} className="w-full resize-none bg-transparent px-3 pt-2 text-sm leading-6 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"/><div className="flex items-center justify-between px-1 pb-1"><span className="text-[10px] text-slate-400">Shift + Enter for a new line · answers include sources</span><button disabled={!draft.trim() || busy || !canAsk} aria-label="Send question" className="grid size-9 place-items-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200"><ArrowUp size={18}/></button></div></form>{error && <p role="alert" className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>}<p className="mt-3 text-center text-[10px] text-slate-400">AI can make mistakes. Verify important details with the cited course materials.</p></div>
-      </section>
-    </main>
-  </div>;
+      </aside>
+
+      <main className="flex h-dvh min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border px-5 pr-16 md:px-8 md:pr-20">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="shrink-0 md:hidden"><BrandLogo className="h-7 w-auto" /></div>
+            <div className="hidden min-w-0 sm:block">
+              <p className="text-xs text-muted-foreground">Course assistant{activeCourse ? ` · ${activeCourse.code}` : ""}</p>
+              <h1 className="headline truncate text-xl leading-tight">{activeCourse ? activeCourse.name : "Your courses"}</h1>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <p className="hidden items-center gap-2 text-xs text-muted-foreground lg:flex"><span className="size-2 rounded-full bg-lime ring-1 ring-foreground/20" aria-hidden="true" /> Connected</p>
+            <span className="ml-2 grid size-8 place-items-center rounded-full bg-foreground text-xs font-semibold text-background" aria-hidden="true">{userInitial}</span>
+            <button onClick={signOut} title="Sign out" aria-label="Sign out" className="grid size-9 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"><LogOut size={17} aria-hidden="true" /></button>
+          </div>
+        </header>
+
+        <section className="mx-auto flex min-h-0 w-full max-w-[1040px] flex-1 flex-col px-4 pb-5 md:px-8">
+          {/* Course controls scroll on their own so the conversation and question box always keep their space. */}
+          <div className="max-h-[34%] shrink-0 overflow-y-auto pb-1 sm:max-h-[45%]">
+            <div className="flex flex-wrap items-center gap-2.5 py-4">
+              <label className="sr-only" htmlFor="course-id">Course</label>
+              <div className="relative min-w-[220px] flex-1">
+                <select id="course-id" value={courseId} onChange={(event) => { setCourseId(event.target.value); setMessages([]); setUploadedDocument(null); }} disabled={coursesLoading || courses.length === 0} className="field h-10 appearance-none rounded-full pl-4 pr-10 text-sm">
+                  {courses.length === 0 ? <option value="">{coursesLoading ? "Loading courses…" : "Create a course to get started"}</option> : courses.map((course) => <option key={course.id} value={course.id}>{course.code} · {course.name}</option>)}
+                </select>
+                <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <button onClick={() => { setShowCourseForm((value) => !value); setCourseFormError(""); }} className="btn-secondary h-10 px-4 text-sm">{showCourseForm ? "Cancel" : "New course"}</button>
+              <button onClick={() => { setShowUpload((value) => !value); setUploadError(""); }} disabled={!courseId} className="btn-primary h-10 px-5 text-sm"><Upload size={15} aria-hidden="true" /> Add course material</button>
+              <button onClick={() => setShowSetup((value) => !value)} title="Course help" aria-label="Course help" className="grid size-10 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"><CircleHelp size={17} aria-hidden="true" /></button>
+            </div>
+            {coursesError && <p role="alert" className="mb-3 rounded-2xl bg-red-tint px-4 py-3 text-sm text-danger">{coursesError}</p>}
+            {showSetup && <div className="mb-3 rounded-2xl border border-border bg-card p-5 text-sm leading-6"><p className="font-semibold">Course access</p><p className="mt-1 text-ink-2">Courses you own or have been added to appear here. Creating a course makes you its instructor.</p></div>}
+            {showCourseForm && <form onSubmit={createCourse} className="mb-3 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[1fr_200px_auto] sm:items-end">
+              <label className="text-[13px] font-semibold">Course name<input required maxLength={200} value={newCourseName} onChange={(event) => setNewCourseName(event.target.value)} placeholder="Introduction to Biology" className="field mt-2 h-11 rounded-full px-4 text-sm font-normal"/></label>
+              <label className="text-[13px] font-semibold">Course code<input required maxLength={40} value={newCourseCode} onChange={(event) => setNewCourseCode(event.target.value)} placeholder="BIO-101" className="field mt-2 h-11 rounded-full px-4 text-sm font-normal"/></label>
+              <button disabled={courseBusy} className="btn-primary h-11 px-6 text-sm">{courseBusy ? <LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> : null} Create course</button>
+              {courseFormError && <p role="alert" className="text-sm text-danger sm:col-span-3">{courseFormError}</p>}
+            </form>}
+            {showUpload && <form onSubmit={uploadCourseDocument} className="mb-3 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className="text-[13px] font-semibold">Document title<input maxLength={200} value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} placeholder={uploadFile?.name || "Lecture notes"} className="field mt-2 h-11 rounded-full px-4 text-sm font-normal"/></label>
+              <label className="text-[13px] font-semibold">Course file<input ref={fileInput} required type="file" accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => setUploadFile(event.target.files?.[0] || null)} className="field mt-2 block h-11 rounded-full px-1.5 py-1.5 text-sm font-normal file:mr-3 file:h-full file:cursor-pointer file:rounded-full file:border-0 file:bg-secondary file:px-4 file:text-[13px] file:font-semibold file:text-foreground"/></label>
+              <button disabled={!uploadFile || uploadBusy} className="btn-primary h-11 px-6 text-sm">{uploadBusy ? <LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> : null} Upload</button>
+              {uploadError && <p role="alert" className="text-sm text-danger sm:col-span-3">{uploadError}</p>}
+              {uploadedDocument && <p className="flex items-start gap-2 text-sm sm:col-span-3"><Check size={16} className="mt-0.5 shrink-0" aria-hidden="true" /><span>“{uploadedDocument.title}” uploaded. Indexing now; you’ll get a notification when it’s ready for questions.</span></p>}
+              <p className="text-xs text-muted-foreground sm:col-span-3">PDF, TXT, or DOCX · up to 25 MiB · stored in private course storage</p>
+            </form>}
+            {courseId && <CourseMaterials documents={materials.documents} loading={materials.loading} error={materials.error} readyCount={materials.readyCount} pendingCount={materials.pendingCount} onDelete={async (document) => { await materials.remove(document); if (uploadedDocument?.id === document.id) setUploadedDocument(null); }} />}
+          </div>
+
+          <div ref={conversationRef} data-testid="conversation" className={`min-h-0 flex-1 overflow-y-auto py-8 ${courseId ? "mt-3 border-t border-border" : ""}`}><div className="flex min-h-full flex-col justify-end">
+            {messages.length === 0 ? (
+              <div className="mx-auto mb-8 w-full max-w-[640px] text-center">
+                <p className="eyebrow">Your learning companion</p>
+                <h2 className="headline mt-4 text-[32px] leading-[1.08] md:text-[34px]">What are you <em>working on?</em></h2>
+                <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-ink-2">Ask a question about your course. NEXIS answers from your campus materials and shows where it found each answer.</p>
+                <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
+                  {["Summarize the key ideas from this week", "Explain a concept from my lecture notes"].map((suggestion) => <button key={suggestion} disabled={!canAsk} onClick={() => setDraft(suggestion)} className="group rounded-2xl border border-border bg-card p-5 text-left text-sm leading-6 transition hover:border-foreground/40 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border">{suggestion}<span className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">Ask the course assistant <ArrowRight size={13} aria-hidden="true" className="transition group-hover:translate-x-0.5" /></span></button>)}
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto w-full max-w-[720px] space-y-8">
+                {messages.map((message) => message.role === "user" ? (
+                  <div key={message.id} className="flex justify-end"><div className="max-w-[85%] rounded-[20px] rounded-br-md bg-foreground px-4 py-3 text-[15px] leading-6 text-background">{message.text}</div></div>
+                ) : (
+                  <div key={message.id} className="min-w-0">
+                    <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold"><span className="h-[2px] w-[14px] rounded-full bg-red" aria-hidden="true" /> NEXIS assistant</p>
+                    <p className="whitespace-pre-wrap text-[15px] leading-7">{message.text}</p>
+                    {message.result?.citations.some((citation) => materials.deletedIds.has(citation.document_id)) && <div className="mt-4 rounded-2xl border border-border bg-secondary px-4 py-3 text-sm leading-6 text-ink-2">This answer used course material that has since been deleted. Ask again to get an answer from the current materials.</div>}
+                    {message.result?.insufficient_evidence && <div className="mt-4 rounded-2xl border border-notice-border bg-notice px-4 py-3 text-sm leading-6 text-notice-ink">The course materials didn’t provide enough evidence for a confident answer. Try a narrower question or check with your instructor.</div>}
+                    {Boolean(message.result?.citations.length) && <div className="mt-5">
+                      <p className="mb-2.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground"><FileText size={14} aria-hidden="true" /> Sources ({message.result!.citations.length})</p>
+                      <div className="grid gap-2.5">
+                        {message.result!.citations.map((citation) => materials.deletedIds.has(citation.document_id) ? (
+                          <div key={citation.chunk_id} className="rounded-xl border border-dashed border-border px-4 py-3"><div className="flex items-center gap-2"><FileText size={15} className="shrink-0 text-muted-foreground" aria-hidden="true" /><span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-muted-foreground line-through">{citation.title || citation.file_name}</span><span className="shrink-0 text-xs font-medium text-muted-foreground">Source deleted</span></div></div>
+                        ) : (
+                          <a key={citation.chunk_id} href={citation.url} target="_blank" rel="noreferrer" className="group block rounded-xl border border-border bg-card px-4 py-3.5 transition hover:border-foreground/40">
+                            <div className="flex items-center gap-2"><FileText size={15} className="shrink-0 text-muted-foreground" aria-hidden="true" /><span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{citation.title || citation.file_name}</span><span className="shrink-0 text-xs tabular-nums text-muted-foreground">{citation.page_start ? `p. ${citation.page_start}${citation.page_end && citation.page_end !== citation.page_start ? `–${citation.page_end}` : ""}` : `Excerpt ${citation.chunk_index + 1}`}</span></div>
+                            <p className="mt-2 line-clamp-2 text-[13px] leading-5 text-ink-2">“{citation.excerpt}”</p>
+                            <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><span className="tabular-nums">{Math.round(citation.similarity * 100)}% match</span> · <span className="font-medium text-foreground group-hover:underline">View source</span><ArrowUpRight size={12} aria-hidden="true" /></p>
+                          </a>
+                        ))}
+                      </div>
+                    </div>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {busy && <p className="mx-auto mt-6 flex w-full max-w-[720px] items-center gap-2 text-sm text-muted-foreground"><LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> Searching course materials and drafting a cited answer…</p>}
+          </div></div>
+
+          <div className="mx-auto w-full max-w-[760px] shrink-0">
+            <form onSubmit={ask} className="rounded-[22px] border border-border bg-card p-2 shadow-[0_6px_24px_rgba(17,17,17,0.06)] transition focus-within:border-foreground/40">
+              <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={handleKey} rows={2} maxLength={1000} disabled={!canAsk} placeholder={canAsk ? "Ask about a concept, reading, or lecture…" : askHint || "Loading course materials…"} className="w-full resize-none bg-transparent px-3 pt-2 text-[15px] leading-6 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed" />
+              <div className="flex items-center justify-between gap-3 px-1 pb-1"><span className="truncate text-[11px] text-muted-foreground">Shift + Enter for a new line · answers include sources</span><button disabled={!draft.trim() || busy || !canAsk} aria-label="Send question" className="btn-primary size-10 shrink-0"><ArrowUp size={18} aria-hidden="true" /></button></div>
+            </form>
+            {error && <p role="alert" className="mt-2 rounded-2xl bg-red-tint px-4 py-2.5 text-sm text-danger">{error}</p>}
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">AI can make mistakes. Verify important details with the cited course materials.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+/** The official NEXIS lockup: black on paper, white on black. Never redrawn or recoloured. */
+function BrandLogo({ className, onDark = false }: { className?: string; onDark?: boolean }) {
+  if (onDark) return <Image src="/nexis-logo-dark.png" alt="NEXIS School of Business" width={628} height={218} priority className={className} />;
+  return <>
+    <Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={628} height={218} priority className={`${className ?? ""} dark:hidden`} />
+    <Image src="/nexis-logo-dark.png" alt="" width={628} height={218} className={`${className ?? ""} hidden dark:block`} />
+  </>;
 }
 
 function SignIn({ email, setEmail, password, setPassword, mode, setMode, busy, error, notice, confirmationExpired, canResendConfirmation, onResend, onSubmit }: { email: string; setEmail: (v: string) => void; password: string; setPassword: (v: string) => void; mode: "signin" | "signup"; setMode: (v: "signin" | "signup") => void; busy: boolean; error: string; notice: string; confirmationExpired: boolean; canResendConfirmation: boolean; onResend: () => void; onSubmit: (event: FormEvent) => void }) {
-  return <main className="grid min-h-screen bg-background md:grid-cols-[1fr_1fr]"><section className="relative hidden flex-col justify-between overflow-hidden bg-[#111111] p-12 text-white md:flex"><div className="absolute -right-24 top-20 size-96 rounded-full bg-[#EC3A5D]/15 blur-3xl"/><div className="relative"><Image src="/nexis-logo-dark.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto" /></div><div className="relative max-w-lg"><div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-indigo-100"><Sparkles size={14}/> Learning, grounded in your campus</div><h1 className="text-5xl font-normal leading-[1.12] tracking-tight">Your courses.<br/>A clearer path<br/><span className="text-[#EC3A5D]">forward.</span></h1><p className="mt-6 max-w-md text-sm leading-6 text-slate-300">Get useful answers from the materials your instructors share, with sources you can check.</p></div><p className="relative text-xs text-slate-400">A focused workspace for campus learning.</p></section><section className="flex items-center justify-center px-6 py-12"><form onSubmit={onSubmit} className="w-full max-w-[390px]"><div className="mb-10 flex items-center md:hidden"><Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={190} height={61} className="hidden h-10 w-auto dark:block" /></div><p className="text-xs font-bold uppercase tracking-[.16em] text-indigo-600">Campus learning</p><h2 className="mt-2 text-3xl font-normal tracking-tight">{mode === "signin" ? "Sign in to NEXIS" : "Create your account"}</h2><p className="mt-2 text-sm text-slate-500">Use your campus email to continue.</p>{confirmationExpired && <div role="alert" className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">That confirmation link has expired. Enter the same email below and request a new link.</div>}<label className="mt-8 block text-xs font-semibold text-slate-700" htmlFor="email">Email</label><input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" placeholder="you@university.edu"/><label className="mt-5 block text-xs font-semibold text-slate-700" htmlFor="password">Password</label><input id="password" type="password" minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" placeholder={mode === "signin" ? "Your password" : "At least 8 characters"}/>{error && <p role="alert" className="mt-3 text-xs text-rose-600">{error}</p>}{notice && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">{notice}</p>}<button disabled={busy} className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{busy ? <LoaderCircle size={16} className="animate-spin"/> : <LockKeyhole size={15}/>} {mode === "signin" ? "Sign in" : "Create account"}</button>{(confirmationExpired || canResendConfirmation) && <button type="button" onClick={onResend} disabled={busy || !email.trim()} className="mt-3 w-full rounded-lg py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-slate-400">{busy ? "Sending confirmation email…" : "Resend confirmation email"}</button>}<button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="mt-2 w-full text-center text-xs font-semibold text-indigo-700 hover:text-indigo-900">{mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}</button><p className="mt-5 text-center text-xs leading-5 text-slate-400">Your course access is checked by the NEXIS server.</p></form></section></main>;
+  return (
+    <main className="grid min-h-screen bg-background md:grid-cols-2">
+      <section className="hidden flex-col justify-between border-r border-transparent bg-[#111111] p-12 text-white md:flex lg:p-16 dark:border-border">
+        <div><BrandLogo onDark className="h-10 w-auto" /></div>
+        <div className="max-w-[520px]">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-lime">Campus AI</p>
+          <p className="headline mt-6 text-[52px] leading-[1.04] text-white lg:text-[60px]">Your courses, answered <em>with sources.</em></p>
+          <p className="mt-7 max-w-md text-[17px] font-light leading-7 text-white/75">Ask about the materials your instructors share. Every answer shows the page it came from.</p>
+        </div>
+        <p className="text-xs text-white/60">NEXIS School of Business · Campus learning workspace</p>
+      </section>
+      <section className="flex items-center justify-center px-6 py-14">
+        <form onSubmit={onSubmit} className="w-full max-w-[400px]">
+          <div className="mb-12 md:hidden"><BrandLogo className="h-9 w-auto" /></div>
+          <p className="eyebrow">{mode === "signin" ? "Welcome back" : "Campus learning"}</p>
+          <h1 className="headline mt-4 text-[38px] leading-[1.08]">{mode === "signin" ? <>Sign in to <em>NEXIS</em></> : <>Create your <em>account</em></>}</h1>
+          <p className="mt-3 text-[15px] text-ink-2">Use your campus email to continue.</p>
+          {confirmationExpired && <div role="alert" className="mt-6 rounded-2xl border border-notice-border bg-notice p-4 text-sm leading-6 text-notice-ink">That confirmation link has expired. Enter the same email below and request a new link.</div>}
+          <label className="mt-9 block text-[13px] font-semibold" htmlFor="email">Email</label>
+          <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field mt-2 h-12 rounded-full px-5 text-[15px]" placeholder="you@university.edu" />
+          <label className="mt-5 block text-[13px] font-semibold" htmlFor="password">Password</label>
+          <input id="password" type="password" minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} required value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-2 h-12 rounded-full px-5 text-[15px]" placeholder={mode === "signin" ? "Your password" : "At least 8 characters"} />
+          {error && <p role="alert" className="mt-4 text-sm text-danger">{error}</p>}
+          {notice && <p role="status" className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm leading-6">{notice}</p>}
+          <button disabled={busy} className="btn-primary mt-7 h-12 w-full text-[15px]">{busy && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />}{mode === "signin" ? "Sign in" : "Create account"}{!busy && <ArrowRight size={17} aria-hidden="true" />}</button>
+          {(confirmationExpired || canResendConfirmation) && <button type="button" onClick={onResend} disabled={busy || !email.trim()} className="mt-3 w-full rounded-full py-2.5 text-sm font-semibold transition hover:bg-secondary disabled:cursor-not-allowed disabled:text-muted-foreground">{busy ? "Sending confirmation email…" : "Resend confirmation email"}</button>}
+          <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="mt-4 w-full rounded-full py-2.5 text-center text-sm font-semibold transition hover:bg-secondary">{mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}</button>
+          <p className="mt-8 text-center text-xs leading-5 text-muted-foreground">Your course access is checked by the NEXIS server.</p>
+        </form>
+      </section>
+    </main>
+  );
 }
 
 function SetupScreen() {
-  return <main className="grid min-h-screen place-items-center bg-background p-5"><section className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-7 shadow-sm md:p-9"><div className="flex items-center gap-4"><Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={190} height={61} className="hidden h-10 w-auto dark:block" /><p className="text-xs text-slate-500">Local pilot setup</p></div><h1 className="mt-8 text-2xl font-normal tracking-tight">Connect your Supabase project</h1><p className="mt-2 text-sm leading-6 text-slate-600">The chat UI is ready. Add the public Supabase project URL and anon key to the frontend environment so campus users can sign in.</p><ol className="mt-5 space-y-3 text-sm text-slate-700"><li className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700">1</span>Open <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">.env.local</code> in the project root.</li><li className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700">2</span>Set <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.</li><li className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700">3</span>Restart the Next dev server. Never place a service role key in these variables.</li></ol><div className="mt-6 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900"><CircleHelp size={15} className="mt-0.5 shrink-0"/>Use only the public anon key in the browser. The API keeps its privileged credentials server-side.</div></section></main>;
+  return (
+    <main className="grid min-h-screen place-items-center bg-background p-5">
+      <section className="w-full max-w-xl rounded-2xl border border-border bg-card p-7 md:p-10">
+        <div className="flex items-center justify-between gap-4"><BrandLogo className="h-9 w-auto" /><p className="text-xs text-muted-foreground">Local pilot setup</p></div>
+        <p className="eyebrow mt-10">Setup</p>
+        <h1 className="headline mt-3 text-[30px] leading-tight">Connect your <em>Supabase project</em></h1>
+        <p className="mt-3 text-[15px] leading-7 text-ink-2">The workspace is ready. Add the public Supabase project URL and anon key to the frontend environment so campus users can sign in.</p>
+        <ol className="mt-6 space-y-3 text-sm leading-6">
+          <li className="flex gap-3"><span className="w-5 shrink-0 font-semibold tabular-nums text-red">1.</span><span>Open <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">.env.local</code> in the project root.</span></li>
+          <li className="flex gap-3"><span className="w-5 shrink-0 font-semibold tabular-nums text-red">2.</span><span>Set <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_URL</code> and <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.</span></li>
+          <li className="flex gap-3"><span className="w-5 shrink-0 font-semibold tabular-nums text-red">3.</span><span>Restart the Next dev server. Never place a service role key in these variables.</span></li>
+        </ol>
+        <p className="mt-7 rounded-2xl border border-notice-border bg-notice p-4 text-sm leading-6 text-notice-ink">Use only the public anon key in the browser. The API keeps its privileged credentials server-side.</p>
+      </section>
+    </main>
+  );
 }
