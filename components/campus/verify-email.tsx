@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, GraduationCap, LoaderCircle, MailCheck } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, LoaderCircle, MailCheck } from "lucide-react";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -72,11 +73,11 @@ export function VerifyEmail({
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f7f8fa] px-6 py-12">
+    <main className="grid min-h-screen place-items-center bg-background px-6 py-12">
       <form onSubmit={submit} className="w-full max-w-[390px]">
-        <div className="mb-8 flex items-center gap-3"><div className="grid size-10 place-items-center rounded-xl bg-indigo-600 text-white"><GraduationCap /></div><span className="font-bold">NEXIS <span className="text-xs font-medium tracking-widest text-slate-400">CAMPUS AI</span></span></div>
+        <div className="mb-8 flex items-center"><Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={190} height={61} className="hidden h-10 w-auto dark:block" /></div>
         <div className="mb-5 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600"><MailCheck size={24} /></div>
-        <h2 className="text-3xl font-semibold tracking-tight">Check your email</h2>
+        <h2 className="text-3xl font-normal tracking-tight">Check your email</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">We sent a verification code to <strong className="font-semibold text-slate-700">{email}</strong>. Enter it to finish creating your account.</p>
         <label className="mt-8 block text-xs font-semibold text-slate-700" htmlFor="verification-code">Verification code</label>
         <input
@@ -95,7 +96,7 @@ export function VerifyEmail({
         />
         {error && <p role="alert" className="mt-3 text-xs text-rose-600">{error}</p>}
         {notice && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">{notice}</p>}
-        <button disabled={busy || code.length < 6} className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{busy && <LoaderCircle size={16} className="animate-spin" />} Verify and continue</button>
+        <button disabled={busy || code.length < 6} className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{busy && <LoaderCircle size={16} className="animate-spin" />} Verify and continue</button>
         <button type="button" onClick={resend} disabled={busy || cooldown > 0} className="mt-3 w-full rounded-lg py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-slate-400">{cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}</button>
         <button type="button" onClick={onBack} className="mt-2 flex w-full items-center justify-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700"><ArrowLeft size={13} /> Use a different email</button>
         <p className="mt-5 text-center text-xs leading-5 text-slate-400">Didn&apos;t get it? Check your spam folder. Codes expire after a while; send a new one if needed.</p>
