@@ -3,7 +3,7 @@ import { CampusChat } from "@/components/campus/campus-chat";
 
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
-    <Suspense fallback={<main className="grid min-h-screen place-items-center bg-background text-sm text-slate-500">Loading your workspace…</main>}>
+    <Suspense fallback={<main className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Loading your workspace…</main>}>
       <HomeContent searchParams={searchParams} />
     </Suspense>
   );

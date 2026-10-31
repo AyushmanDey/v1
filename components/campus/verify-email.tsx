@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, LoaderCircle, MailCheck } from "lucide-react";
+import { ArrowLeft, LoaderCircle } from "lucide-react";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -73,13 +73,13 @@ export function VerifyEmail({
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-background px-6 py-12">
-      <form onSubmit={submit} className="w-full max-w-[390px]">
-        <div className="mb-8 flex items-center"><Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={190} height={61} priority className="h-10 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={190} height={61} className="hidden h-10 w-auto dark:block" /></div>
-        <div className="mb-5 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600"><MailCheck size={24} /></div>
-        <h2 className="text-3xl font-normal tracking-tight">Check your email</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-500">We sent a verification code to <strong className="font-semibold text-slate-700">{email}</strong>. Enter it to finish creating your account.</p>
-        <label className="mt-8 block text-xs font-semibold text-slate-700" htmlFor="verification-code">Verification code</label>
+    <main className="grid min-h-screen place-items-center bg-background px-6 py-14">
+      <form onSubmit={submit} className="w-full max-w-[400px]">
+        <div className="mb-12"><Image src="/nexis-logo-light.png" alt="NEXIS School of Business" width={628} height={218} priority className="h-9 w-auto dark:hidden" /><Image src="/nexis-logo-dark.png" alt="" width={628} height={218} className="hidden h-9 w-auto dark:block" /></div>
+        <p className="eyebrow">Verify your email</p>
+        <h1 className="headline mt-4 text-[38px] leading-[1.08]">Check your <em>email</em></h1>
+        <p className="mt-3 text-[15px] leading-7 text-ink-2">We sent a verification code to <strong className="font-semibold text-foreground">{email}</strong>. Enter it to finish creating your account.</p>
+        <label className="mt-9 block text-[13px] font-semibold" htmlFor="verification-code">Verification code</label>
         <input
           id="verification-code"
           value={code}
@@ -91,15 +91,15 @@ export function VerifyEmail({
           minLength={6}
           maxLength={10}
           pattern="[0-9]{6,10}"
-          placeholder="12345678"
-          className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-center font-mono text-xl tracking-[.4em] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          placeholder="Enter code"
+          className="field mt-2 h-14 rounded-full px-5 text-center text-2xl font-medium tabular-nums tracking-[.35em] placeholder:text-base placeholder:font-normal placeholder:tracking-normal"
         />
-        {error && <p role="alert" className="mt-3 text-xs text-rose-600">{error}</p>}
-        {notice && <p role="status" className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">{notice}</p>}
-        <button disabled={busy || code.length < 6} className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{busy && <LoaderCircle size={16} className="animate-spin" />} Verify and continue</button>
-        <button type="button" onClick={resend} disabled={busy || cooldown > 0} className="mt-3 w-full rounded-lg py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-slate-400">{cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}</button>
-        <button type="button" onClick={onBack} className="mt-2 flex w-full items-center justify-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700"><ArrowLeft size={13} /> Use a different email</button>
-        <p className="mt-5 text-center text-xs leading-5 text-slate-400">Didn&apos;t get it? Check your spam folder. Codes expire after a while; send a new one if needed.</p>
+        {error && <p role="alert" className="mt-4 text-sm text-danger">{error}</p>}
+        {notice && <p role="status" className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm leading-6">{notice}</p>}
+        <button disabled={busy || code.length < 6} className="btn-primary mt-7 h-12 w-full text-[15px]">{busy && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />} Verify and continue</button>
+        <button type="button" onClick={resend} disabled={busy || cooldown > 0} className="mt-3 w-full rounded-full py-2.5 text-sm font-semibold tabular-nums transition hover:bg-secondary disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent">{cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}</button>
+        <button type="button" onClick={onBack} className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"><ArrowLeft size={14} aria-hidden="true" /> Use a different email</button>
+        <p className="mt-8 text-center text-xs leading-5 text-muted-foreground">Didn&apos;t get it? Check your spam folder. Codes expire after a while; send a new one if needed.</p>
       </form>
     </main>
   );

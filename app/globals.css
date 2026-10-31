@@ -10,26 +10,15 @@
   --font-sans: var(--font-poppins);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-heading: var(--font-fraunces);
-  --color-indigo-50: #fff1f3;
-  --color-indigo-100: #ffe4e9;
-  --color-indigo-200: #ffc7d2;
-  --color-indigo-300: #ffa0b2;
-  --color-indigo-400: #f46b86;
-  --color-indigo-500: #ec3a5d;
-  --color-indigo-600: #ec3a5d;
-  --color-indigo-700: #cb294b;
-  --color-indigo-800: #a8213f;
-  --color-indigo-900: #70182e;
-  --color-slate-50: #f5f2ec;
-  --color-slate-100: #ebe7df;
-  --color-slate-200: #e2dfda;
-  --color-slate-300: #c9c8c4;
-  --color-slate-400: #8a8a85;
-  --color-slate-500: #65645f;
-  --color-slate-600: #3d3d3a;
-  --color-slate-700: #2a2927;
-  --color-slate-800: #17171b;
-  --color-slate-900: #111111;
+  /* NEXIS brand roles (see the brand kit): ink tiers, the two accents, and status pairs. */
+  --color-ink-2: var(--ink-2);
+  --color-lime: var(--lime);
+  --color-red: var(--red);
+  --color-danger: var(--danger);
+  --color-red-tint: var(--red-tint);
+  --color-notice: var(--notice);
+  --color-notice-border: var(--notice-border);
+  --color-notice-ink: var(--notice-ink);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -68,100 +57,87 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * NEXIS brand kit: Black #111111 and Paper #F5F2EC carry the layout, White is for cards and fields,
+ * Red #EC3A5D is the one action and the italic headline phrase, Lime #D5FE00 is a small pop only.
+ * Text greys are chosen to keep 4.5:1 on both paper and white.
+ */
 :root {
-  --background: #f5f2ec;
+  --paper: #f5f2ec;
+  --red: #ec3a5d;
+  --lime: #d5fe00;
+  --background: var(--paper);
   --foreground: #111111;
+  --ink-2: #3d3d3a;
   --card: #ffffff;
   --card-foreground: #111111;
   --popover: #ffffff;
   --popover-foreground: #111111;
-  --primary: #ec3a5d;
+  --primary: var(--red);
   --primary-foreground: #ffffff;
   --secondary: #ebe7df;
   --secondary-foreground: #111111;
   --muted: #ebe7df;
-  --muted-foreground: #65645f;
-  --accent: #fff1f3;
+  --muted-foreground: #5c5b56;
+  --accent: #fbe9ed;
   --accent-foreground: #a8213f;
-  --destructive: #c92849;
+  --destructive: #b8264a;
+  --danger: #b8264a;
+  --red-tint: #fbe9ed;
+  --notice: #fffbeb;
+  --notice-border: #fde68a;
+  --notice-ink: #92400e;
   --border: rgba(17, 17, 17, 0.12);
-  --input: rgba(17, 17, 17, 0.16);
-  --ring: #f46b86;
+  --input: rgba(17, 17, 17, 0.18);
+  --ring: var(--red);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: #f5f2ec;
+  --sidebar: var(--paper);
   --sidebar-foreground: #111111;
-  --sidebar-primary: #ec3a5d;
+  --sidebar-primary: var(--red);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff1f3;
-  --sidebar-accent-foreground: #a8213f;
+  --sidebar-accent: #ebe7df;
+  --sidebar-accent-foreground: #111111;
   --sidebar-border: rgba(17, 17, 17, 0.12);
-  --sidebar-ring: #f46b86;
+  --sidebar-ring: var(--red);
 }
 
+/* Dark: Black is the ground, paper becomes the ink, surfaces step up in lightness. */
 .dark {
   color-scheme: dark;
-  --background: #17171b;
+  --background: #111111;
   --foreground: #f5f2ec;
-  --card: #222126;
+  --ink-2: #d6d3cc;
+  --card: #1b1b1b;
   --card-foreground: #f5f2ec;
-  --popover: #222126;
+  --popover: #1f1f1f;
   --popover-foreground: #f5f2ec;
-  --primary: #ec3a5d;
+  --primary: var(--red);
   --primary-foreground: #ffffff;
-  --secondary: #302e32;
+  --secondary: #262626;
   --secondary-foreground: #f5f2ec;
-  --muted: #302e32;
-  --muted-foreground: #c9c8c4;
-  --accent: #38232b;
-  --accent-foreground: #ffc7d2;
-  --destructive: #f46b86;
-  --border: rgba(245, 242, 236, 0.14);
-  --input: rgba(245, 242, 236, 0.18);
-  --ring: #f46b86;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: #1b1b1f;
+  --muted: #262626;
+  --muted-foreground: #a9a7a1;
+  --accent: #3a1e26;
+  --accent-foreground: #ffb3c2;
+  --destructive: #ff8ba1;
+  --danger: #ff8ba1;
+  --red-tint: #3a1e26;
+  --notice: #2a2414;
+  --notice-border: #5c4a17;
+  --notice-ink: #f3d18a;
+  --border: rgba(245, 242, 236, 0.12);
+  --input: rgba(245, 242, 236, 0.2);
+  --ring: var(--red);
+  --sidebar: #111111;
   --sidebar-foreground: #f5f2ec;
-  --sidebar-primary: #ec3a5d;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #38232b;
-  --sidebar-accent-foreground: #ffc7d2;
-  --sidebar-border: rgba(245, 242, 236, 0.14);
-  --sidebar-ring: #f46b86;
-  --color-slate-50: #222126;
-  --color-slate-100: #302e32;
-  --color-slate-200: #454348;
-  --color-slate-300: #65645f;
-  --color-slate-400: #a6a49f;
-  --color-slate-500: #c9c8c4;
-  --color-slate-600: #d9d7d2;
-  --color-slate-700: #ebe7df;
-  --color-slate-800: #f5f2ec;
-  --color-slate-900: #ffffff;
-  --color-amber-50: #332916;
-  --color-amber-100: #493a1b;
-  --color-amber-200: #70531d;
-  --color-amber-800: #f3d18a;
-  --color-amber-900: #ffe7ad;
-  --color-emerald-50: #182b23;
-  --color-emerald-700: #9bdfb8;
-  --color-emerald-800: #b8f0cd;
-  --color-rose-50: #38232b;
-  --color-rose-200: #6b3342;
-  --color-rose-600: #ff8ba1;
-  --color-rose-700: #ffb3c2;
-}
-
-.dark .bg-white {
-  background-color: var(--card) !important;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #f5f2ec;
+  --sidebar-border: rgba(245, 242, 236, 0.12);
 }
 
 @layer base {
@@ -174,11 +150,94 @@
   html {
     @apply font-sans;
   }
-  h1,
-  h2,
-  h3,
-  .font-heading {
+}
+
+@layer components {
+  /* Headline: Fraunces regular; one key phrase in italic red on the same baseline. */
+  .headline {
     font-family: var(--font-fraunces), Georgia, serif;
     font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .headline em {
+    font-style: italic;
+    color: var(--red);
+  }
+  /* Eyebrow: a short red dash, then small uppercase letter-spaced grey text. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--red);
+  }
+  /* CTA: fully pill-shaped, solid red, white Poppins SemiBold, label and arrow centred as one group. */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 999px;
+    background: var(--red);
+    color: #ffffff;
+    font-weight: 600;
+    transition: background-color 150ms ease, opacity 150ms ease;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #d92f51;
+  }
+  .btn-primary:disabled {
+    cursor: not-allowed;
+    background: var(--secondary);
+    color: var(--muted-foreground);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 1px solid var(--input);
+    background: var(--card);
+    color: var(--foreground);
+    font-weight: 500;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--foreground);
+  }
+  .btn-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  /* Form fields: white on paper, hairline edge, the ink edge and a soft red ring on focus. */
+  .field {
+    width: 100%;
+    border: 1px solid var(--input);
+    background: var(--card);
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .field::placeholder {
+    color: var(--muted-foreground);
+  }
+  .field:focus {
+    border-color: var(--foreground);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 18%, transparent);
+  }
+  .field:disabled {
+    cursor: not-allowed;
+    color: var(--muted-foreground);
   }
 }
