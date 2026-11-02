@@ -6,7 +6,7 @@ NEXIS is a pilot campus learning workspace with a course-grounded assistant. The
 
 This project is a modular monolith: one Next.js app. The App Router serves the UI and the `/api/v1` route handlers; server-only modules in `lib/server/` implement authentication, courses, document uploads, ingestion, and the campus assistant. Supabase provides authentication, PostgreSQL with row-level security, private object storage, and pgvector. Hosted chat and embedding providers are configured through server-side environment variables.
 
-See [docs/architecture.md](docs/architecture.md) for the system structure and security boundaries.
+See [docs/architecture.md](docs/architecture.md) for the full architecture: every technology used, the data model, the API, security, and each end-to-end flow with diagrams.
 
 ## Local setup
 
